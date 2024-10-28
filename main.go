@@ -1,8 +1,6 @@
 package main
 
 import (
-	"net"
-
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 )
@@ -18,20 +16,4 @@ func main() {
 	}
 
 	logger.Info("nats healthz response", zap.ByteString("response", resp.Body()))
-}
-
-// resolve resolves the given headless service into the pods ip address.
-func resolve(headless string) ([]string, error) {
-	ips, err := net.LookupIP(headless)
-	if err != nil {
-		return nil, err
-	}
-
-	var pods []string
-
-	for _, ip := range ips {
-		pods = append(pods, ip.String())
-	}
-
-	return pods, nil
 }

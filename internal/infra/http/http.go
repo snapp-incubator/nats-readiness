@@ -10,14 +10,18 @@ import (
 )
 
 type Config struct {
-	Listen string
+	Listen string `json:"listen,omitempty" koanf:"listen"`
 }
 
 type HTTP struct {
 	r *http.ServeMux
 }
 
-func Provide(cfg Config, logger *zap.Logger, lc fx.Lifecycle) HTTP {
+func Provide(
+	lc fx.Lifecycle,
+	cfg Config,
+	logger *zap.Logger,
+) HTTP {
 	router := http.NewServeMux()
 
 	router.Handle("GET /metrics", promhttp.Handler())
