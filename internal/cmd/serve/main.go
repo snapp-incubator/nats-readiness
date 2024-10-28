@@ -12,7 +12,7 @@ import (
 
 func main(
 	logger *zap.Logger,
-	_ *http.HTTP,
+	_ http.HTTP,
 ) {
 	logger.Info("welcome to our server")
 }
@@ -24,7 +24,7 @@ func Register(
 	root.AddCommand(
 		//nolint: exhaustruct
 		&cobra.Command{
-			Use:   "server",
+			Use:   "serve",
 			Short: "Run server to serve the requests",
 			Run: func(_ *cobra.Command, _ []string) {
 				fx.New(
