@@ -12,6 +12,7 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/snapp-incubator/nats-readiness/internal/infra/http"
 	"github.com/snapp-incubator/nats-readiness/internal/infra/logger"
+	"github.com/snapp-incubator/nats-readiness/internal/infra/nats"
 	"github.com/tidwall/pretty"
 	"go.uber.org/fx"
 )
@@ -23,9 +24,9 @@ const prefix = "nats_readiness_"
 type Config struct {
 	fx.Out
 
-	Logger    logger.Config `koanf:"logger"    json:"logger,omitempty"`
-	HTTP      http.Config   `koanf:"http"      json:"http,omitempty"`
-	Endpoints []string      `koanf:"endpoints" json:"endpoints,omitempty"`
+	Logger logger.Config `koanf:"logger" json:"logger,omitempty"`
+	HTTP   http.Config   `koanf:"http"   json:"http,omitempty"`
+	NATS   nats.Config   `koanf:"nats"   json:"nats,omitempty"`
 }
 
 func Provide() Config {

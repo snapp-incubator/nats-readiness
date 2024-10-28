@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/snapp-incubator/nats-readiness/internal/infra/http"
 	"github.com/snapp-incubator/nats-readiness/internal/infra/logger"
+	"github.com/snapp-incubator/nats-readiness/internal/infra/nats"
 )
 
 func Default() Config {
@@ -13,8 +14,10 @@ func Default() Config {
 		Logger: logger.Config{
 			Level: "debug",
 		},
-		Endpoints: []string{
-			"http://127.0.0.1:8222",
+		NATS: nats.Config{
+			Endpoints: []string{
+				"http://127.0.0.1:8222",
+			},
 		},
 	}
 }
