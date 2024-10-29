@@ -1,9 +1,11 @@
 package serve
 
 import (
+	"github.com/snapp-incubator/nats-readiness/internal/domain/service"
 	"github.com/snapp-incubator/nats-readiness/internal/infra/config"
 	"github.com/snapp-incubator/nats-readiness/internal/infra/http"
 	"github.com/snapp-incubator/nats-readiness/internal/infra/logger"
+	"github.com/snapp-incubator/nats-readiness/internal/infra/nats"
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
@@ -12,6 +14,7 @@ import (
 
 func main(
 	logger *zap.Logger,
+	_ service.NATS,
 	_ http.HTTP,
 ) {
 	logger.Info("welcome to our server")
@@ -34,6 +37,8 @@ func Register(
 						return &fxevent.ZapLogger{Logger: logger}
 					}),
 					fx.Provide(http.Provide),
+					fx.Provide(service.ProvideNATS),
+					fx.Provide(nats.Provide),
 					fx.Invoke(main),
 				).Run()
 			},

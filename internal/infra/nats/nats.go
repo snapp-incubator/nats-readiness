@@ -109,8 +109,6 @@ func (n NATS) Healthz() error {
 			continue
 		}
 
-		n.logger.Debug("nats healthz response", zap.ByteString("response", resp.Body()))
-
 		if !resp.IsSuccess() {
 			errs = append(errs, HTTPError{
 				endpoint:  client.BaseURL,
@@ -131,13 +129,46 @@ func (n NATS) Healthz() error {
 	return nil
 }
 
-func (n NATS) Raftz() {
+func (n NATS) Raftz() (map[string]Raftz, error) {
+	errs := make([]error, 0)
+	result := make(map[string]Raftz)
+
 	for _, client := range n.clients {
-		resp, err := client.R().Get("/raftz")
+		var raftz Raftz
+
+		resp, err := client.R().SetBody(&raftz).Get("/raftz")
 		if err != nil {
 			n.logger.Error("failed to call nats raftz endpoint", zap.Error(err), zap.String("url", client.BaseURL))
+
+			errs = append(errs, HTTPError{
+				endpoint:  client.BaseURL,
+				error:     err,
+				status:    -1,
+				operation: "raftz",
+			})
+
+			continue
 		}
 
-		n.logger.Debug("nats healthz response", zap.ByteString("response", resp.Body()))
+		if !resp.IsSuccess() {
+			errs = append(errs, HTTPError{
+				endpoint:  client.BaseURL,
+				error:     nil,
+				status:    resp.StatusCode(),
+				operation: "raftz",
+			})
+
+			continue
+		}
+
+		n.logger.Debug("nats raftz response", zap.Any("response", raftz))
+
+		result[client.BaseURL] = raftz
 	}
+
+	if len(errs) > 0 {
+		return result, errors.Join(errs...)
+	}
+
+	return result, nil
 }
