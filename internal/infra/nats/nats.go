@@ -1,11 +1,36 @@
 package nats
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 )
+
+type HTTPError struct {
+	endpoint  string
+	error     error
+	status    int
+	operation string
+}
+
+func (h HTTPError) Error() string {
+	if h.error != nil {
+		return fmt.Sprintf("failed to call %s endpoint on %s, %s", h.operation, h.endpoint, h.error)
+	}
+
+	return fmt.Sprintf("failed to call %s endpoint on %s, status %d", h.operation, h.endpoint, h.status)
+}
+
+func (h HTTPError) Unwrap() error {
+	if h.error != nil {
+		return h.error
+	}
+
+	return nil
+}
 
 type Raftz struct {
 	SYS struct {
@@ -66,13 +91,53 @@ func Provide(logger *zap.Logger, cfg Config) NATS {
 	}
 }
 
-func (n NATS) Raftz() {
+func (n NATS) Healthz() error {
+	errs := make([]error, 0)
+
 	for _, client := range n.clients {
 		resp, err := client.R().SetQueryParam("js-enabled-only", "1").Get("/healthz")
 		if err != nil {
 			n.logger.Error("failed to call nats healthz endpoint", zap.Error(err), zap.String("url", client.BaseURL))
+
+			errs = append(errs, HTTPError{
+				endpoint:  client.BaseURL,
+				error:     err,
+				status:    -1,
+				operation: "healthz",
+			})
+
+			continue
 		}
 
-		n.logger.Info("nats healthz response", zap.ByteString("response", resp.Body()))
+		n.logger.Debug("nats healthz response", zap.ByteString("response", resp.Body()))
+
+		if !resp.IsSuccess() {
+			errs = append(errs, HTTPError{
+				endpoint:  client.BaseURL,
+				error:     nil,
+				status:    resp.StatusCode(),
+				operation: "healthz",
+			})
+
+			continue
+		}
+
+	}
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	return nil
+}
+
+func (n NATS) Raftz() {
+	for _, client := range n.clients {
+		resp, err := client.R().Get("/raftz")
+		if err != nil {
+			n.logger.Error("failed to call nats raftz endpoint", zap.Error(err), zap.String("url", client.BaseURL))
+		}
+
+		n.logger.Debug("nats healthz response", zap.ByteString("response", resp.Body()))
 	}
 }
