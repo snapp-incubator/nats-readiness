@@ -136,7 +136,7 @@ func (n NATS) Raftz() (map[string]Raftz, error) {
 	for _, client := range n.clients {
 		var raftz Raftz
 
-		resp, err := client.R().SetBody(&raftz).Get("/raftz")
+		resp, err := client.R().SetResult(&raftz).Get("/raftz")
 		if err != nil {
 			n.logger.Error("failed to call nats raftz endpoint", zap.Error(err), zap.String("url", client.BaseURL))
 
